@@ -10,24 +10,28 @@ class Program
 {
     static void Main(string[] args)
     {
-        Network network = new Network(2, 1, 2);
-        foreach (var layer in network)
-        {
-            foreach (var neuron in layer)
-            {
-                foreach (var weight in neuron)
-                {
-                    System.Console.Write(weight + "; ");
-                }
-                System.Console.WriteLine("bias: " + neuron.bias);
+        Network network = new Network(
+            new List<Layer>(){
+                new Layer(new List<Neuron>{
+                     new Neuron(new List<double>(){
+                         0.13436424411240122, 0.8474337369372327
+                     }, 0.763774618976614)
+                }),
+                new Layer(new List<Neuron>{
+                     new Neuron(new List<double>(){
+                         0.2550690257394217
+                     }, 0.49543508709194095),
+                     new Neuron(new List<double>(){
+                         0.4494910647887381
+                     }, 0.651592972722763)
+                })
             }
-        }
-        System.Console.WriteLine("Output:");
-        foreach (var output in ForwardPropagate(network, new Inputs{1.0, 0.0, 0.0}))
+        );
+
+        foreach (var output in ForwardPropagate(network, new Inputs{1, 0, 0}))
         {
-            System.Console.Write(output + "; ");
+            System.Console.WriteLine(output);
         }
-        System.Console.WriteLine();
     }
 
     static Outputs ForwardPropagate(Network network, Inputs lastOutput)

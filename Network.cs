@@ -5,6 +5,11 @@ class Network : IEnumerable<Layer>
     public List<Layer> layers;
     private int position = -1;
 
+    public Network(List<Layer> layers)
+    {
+        this.layers = layers;
+    }
+
     public Network(int nInputs, int nHidden, int nOutputs)
     {
         layers = new List<Layer>();
