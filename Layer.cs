@@ -3,7 +3,6 @@ using System.Collections;
 class Layer : IEnumerable<Neuron>
 {
     private List<Neuron> neurons = new List<Neuron>();
-    private int position = -1;
 
     public Layer(List<Neuron> neurons)
     {

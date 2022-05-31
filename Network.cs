@@ -3,7 +3,6 @@ using System.Collections;
 class Network : IEnumerable<Layer>
 {
     public List<Layer> layers;
-    private int position = -1;
 
     public Network(List<Layer> layers)
     {
