@@ -9,17 +9,26 @@ class Network : IEnumerable<Layer>
         this.layers = layers;
     }
 
-    public Network(int nInputs, int nHidden, int nOutputs)
+    public Network(int nInputs, int nHiddenNeuron, int nOutputs, int nHiddenLayer = 1)
     {
         layers = new List<Layer>();
-        Layer hiddenLayer = new Layer(Utils.GenerateList(nHidden, (_) => {
+        Layer hiddenLayer = new Layer(Utils.GenerateList(nHiddenNeuron, (_) => {
             return new Neuron(Utils.GenerateList(nInputs, (_) => {
                 return Utils.Random.NextDouble();
             }), Utils.Random.NextDouble());
         }));
         layers.Add(hiddenLayer);
+        for (int i = 0; i < nHiddenLayer - 1; i++)
+        {
+            Layer hiddenLayerI = new Layer(Utils.GenerateList(nHiddenNeuron, (_) => {
+                return new Neuron(Utils.GenerateList(nHiddenNeuron, (_) => {
+                    return Utils.Random.NextDouble();
+                }), Utils.Random.NextDouble());
+            }));
+            layers.Add(hiddenLayerI);
+        }
         Layer outputLayer = new Layer(Utils.GenerateList(nOutputs, (_) => {
-            return new Neuron(Utils.GenerateList(nHidden, (_) => {
+            return new Neuron(Utils.GenerateList(nHiddenNeuron, (_) => {
                 return Utils.Random.NextDouble();
             }), Utils.Random.NextDouble());
         }));
