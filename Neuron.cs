@@ -3,6 +3,7 @@ using System.Collections;
 class Neuron : IEnumerable<double>
 {
     public double bias;
+    public double cachedBias;
     public double output = 0;
     public double dEtotal_dOutput = 0;
     public double dOutput_dNet = 0;
@@ -49,6 +50,7 @@ class Neuron : IEnumerable<double>
         var tmp = this.weights;
         this.weights = this.cachedWeights;
         this.cachedWeights = tmp;
+        this.bias = this.cachedBias;
     }
 
     public override string ToString()

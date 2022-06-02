@@ -68,6 +68,9 @@ class Network : IEnumerable<Layer>
                 currentNeuron.dEtotal_dOutput = -(target - output);
                 currentNeuron.dOutput_dNet  = output * (1 - output);
 
+                // update bias
+                currentNeuron.cachedBias -= learningRate * currentNeuron.dEtotal_dOutput * currentNeuron.dOutput_dNet;
+
                 // go through each weight of the neuron
                 for (int j = 0; j < neuronWeightCount; j++)
                 {
@@ -118,6 +121,9 @@ class Network : IEnumerable<Layer>
                     currentNeuron.dEtotal_dOutput += nextLayerCurrentNeuron.dEtotal_dOutput * nextLayerCurrentNeuron.dOutput_dNet * dNet_dOutput;
                 }
                 currentNeuron.dOutput_dNet  = output * (1 - output);
+
+                // update bias
+                currentNeuron.cachedBias -= learningRate * currentNeuron.dEtotal_dOutput * currentNeuron.dOutput_dNet;
 
                 // go through each weight of the neuron
                 for (int j = 0; j < neuronWeightCount; j++)
