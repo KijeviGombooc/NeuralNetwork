@@ -1,67 +1,36 @@
 ﻿
-// using Neuron = System.Collections.Generic.List<double>;
-// using Layer = System.Collections.Generic.List<Neuron>;
-using Inputs = System.Collections.Generic.List<double>;
-using Outputs = System.Collections.Generic.List<double>;
-
-
-
 class Program
 {
     static void Main(string[] args)
     {
-        Network network = new Network(
-            new List<Layer>(){
-                new Layer(new List<Neuron>{
-                     new Neuron(new List<double>(){
-                         0.13436424411240122, 0.8474337369372327
-                     }, 0.763774618976614)
-                }),
-                new Layer(new List<Neuron>{
-                     new Neuron(new List<double>(){
-                         0.2550690257394217
-                     }, 0.49543508709194095),
-                     new Neuron(new List<double>(){
-                         0.4494910647887381
-                     }, 0.651592972722763)
-                })
-            }
-        );
+        int inputCount = 2;
+        int outputCount = 1;
+        int hiddenCount = 5;
+        int epochCount = 1000000;
+        double learningRate = 0.05;
 
-        foreach (var output in ForwardPropagate(network, new Inputs{1, 0, 0}))
+        List<TrainData> trainDatas = new List<TrainData>()
         {
-            System.Console.WriteLine(output);
-        }
-    }
+            new TrainData(new List<double>(){ 0, 0 }, new List<double>(){ 0 }),
+            new TrainData(new List<double>(){ 0, 1 }, new List<double>(){ 1 }),
+            new TrainData(new List<double>(){ 1, 1 }, new List<double>(){ 0 }),
+            new TrainData(new List<double>(){ 1, 0 }, new List<double>(){ 1 })
+        };
+        Network network = new Network(inputCount, hiddenCount, outputCount);
+        for (int e = 0; e < epochCount; e++)
+        {
+            trainDatas = trainDatas.OrderBy(c => Utils.Random.Next()).ToList();
 
-    static Outputs ForwardPropagate(Network network, Inputs lastOutput)
-    {
-        Inputs inputs = lastOutput;
-        foreach (var layer in network)
-        {
-            Inputs newInputs = new Inputs();
-            foreach (var neuron in layer)
+            for (int i = 0; i < trainDatas.Count; i++)
             {
-                double activation = Activate(neuron, inputs);
-                neuron.output = Transfer(activation);
-                newInputs.Add(neuron.output);
+                network.Forward(trainDatas[i].inputData);
+                network.Backward(trainDatas[i].inputData, trainDatas[i].expectedValue, learningRate);
             }
-            inputs = newInputs;
         }
-        return inputs;
-    }
-
-    static double Transfer(double activation)
-    {
-        return 1.0 / (1.0 + Math.Exp(-activation));
-    }
-
-    static double Activate(Neuron neuron, Inputs inputs)
-    {
-        double activation = neuron.bias;
-        int i = 0;
-        foreach (var weight in neuron)
-            activation += weight * inputs[i++];
-        return activation;
+        for (int i = 0; i < trainDatas.Count; i++)
+        {
+            network.Forward(trainDatas[i].inputData);
+            System.Console.WriteLine($"Input: {{{trainDatas[i].inputData[0]}; {trainDatas[i].inputData[1]}}}; Expected output: {trainDatas[i].expectedValue[0]}; Trained output: {network.Output()[0]}");
+        }
     }
 }

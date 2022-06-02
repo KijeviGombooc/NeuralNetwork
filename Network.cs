@@ -26,9 +26,131 @@ class Network : IEnumerable<Layer>
         layers.Add(outputLayer);
     }
 
+    public void Forward(List<double> input)
+    {
+        layers[0].ActivateAndTransferNeurons(input);
+        for (int i = 1; i < layers.Count; i++)
+        {
+            Layer previousLayer = layers[i - 1];
+            Layer currentLayer = layers[i];
+            currentLayer.ActivateAndTransferNeurons(previousLayer.NeuronOutputs());
+        }
+    }
+
+    public void Backward(List<double> input, List<double> expectedOutput, double learningRate)
+    {
+        // first layer is a little different than the rest, it has its own separate code:
+        {
+            // variables for ease of read
+            Layer lastLayer = layers[layers.Count() - 1];
+            Layer previousLayer = layers[layers.Count() - 2];
+            int lastLayerNeuronCount = lastLayer.Count();
+
+            // go through each neuron in last layer
+            for (int i = 0; i < lastLayerNeuronCount; i++)
+            {
+                // variables for ease of read
+                Neuron currentNeuron = lastLayer[i];
+                double output = currentNeuron.output;
+                double neuronWeightCount = currentNeuron.Count();
+                double target = expectedOutput[i];
+
+                // calculate partial derivatives for this neuron (caching them for later use)
+                currentNeuron.dEtotal_dOutput = -(target - output);
+                currentNeuron.dOutput_dNet  = output * (1 - output);
+
+                // go through each weight of the neuron
+                for (int j = 0; j < neuronWeightCount; j++)
+                {
+                    // variables for ease of read
+                    double previousOutput = previousLayer[j].output;
+                    double currentWeight = currentNeuron[j];
+
+                    // calculate partial derivative of pure neuron output according to current weight
+                    double dNet_dWeight  = previousOutput;
+
+                    // calculate total error effect on current weight
+                    double dEtotal_dWeight = currentNeuron.dEtotal_dOutput * currentNeuron.dOutput_dNet * dNet_dWeight;
+
+                    // calculate new weight and cache it
+                    currentNeuron.SetCachedWeight(j, currentWeight - learningRate * dEtotal_dWeight);
+                }
+            }
+        }
+
+        // the other layers are calculated the same way:
+        // go through each layer
+        for (int layerIndex = layers.Count - 2; layerIndex >= 0 ; layerIndex--)
+        {
+            // variables for ease of read
+            Layer currentLayer = layers[layerIndex];
+            Layer nextLayer = layers[layerIndex + 1];
+            Layer? previousLayer = layerIndex == 0 ? null : layers[layerIndex - 1];
+            int currentLayerNeuronCount = currentLayer.Count();
+            int nextLayerNeuronCount = nextLayer.Count();
+
+            for (int i = 0; i < currentLayerNeuronCount; i++)
+            {
+                // variables for ease of read
+                Neuron currentNeuron = currentLayer[i];
+                double output = currentNeuron.output;
+                double neuronWeightCount = currentNeuron.Count();
+                
+                // calculate partial derivatives for this neuron (caching them for later use)
+                currentNeuron.dEtotal_dOutput = 0;
+                // go through each neuron in next layer and calculate partial derivative of next layer neuron error according to current output
+                for (int j = 0; j < nextLayerNeuronCount; j++)
+                {
+                    // variable for ease of read
+                    Neuron nextLayerCurrentNeuron = nextLayer[j];
+                    double dNet_dOutput = nextLayerCurrentNeuron[i];
+
+                    // calculate one part of derivative and add it to sum
+                    currentNeuron.dEtotal_dOutput += nextLayerCurrentNeuron.dEtotal_dOutput * nextLayerCurrentNeuron.dOutput_dNet * dNet_dOutput;
+                }
+                currentNeuron.dOutput_dNet  = output * (1 - output);
+
+                // go through each weight of the neuron
+                for (int j = 0; j < neuronWeightCount; j++)
+                {
+                    // variables for ease of read
+                    double previousOutput = previousLayer == null ? input[j] : previousLayer[j].output;
+                    double currentWeight = currentNeuron[j];
+
+                    // calculate partial derivative of pure neuron output according to current weight
+                    double dNet_dWeight  = previousOutput;
+
+                    // calculate total error effect on current weight
+                    double dEtotal_dWeight = currentNeuron.dEtotal_dOutput * currentNeuron.dOutput_dNet * dNet_dWeight;
+
+                    // calculate new weight and cache it
+                    currentNeuron.SetCachedWeight(j, currentWeight - learningRate * dEtotal_dWeight);
+                }
+            }
+        }
+
+        foreach (var layer in layers)
+        {
+            foreach (var neuron in layer)
+            {
+                neuron.UpdateWeights();
+            }
+        }
+    }
+
+    public List<double> Output()
+    {
+        return layers.Last().NeuronOutputs();
+    }
+
     public IEnumerator<Layer> GetEnumerator()
     {
         return new NetworkEnumerator(this);
+    }
+
+    public Layer this[int index]
+    {
+        get => layers[index];
     }
 
     IEnumerator IEnumerable.GetEnumerator()

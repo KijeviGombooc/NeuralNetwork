@@ -9,9 +9,28 @@ class Layer : IEnumerable<Neuron>
         this.neurons = neurons;
     }
 
+    public void ActivateAndTransferNeurons(List<double> inputs)
+    {
+        foreach (var neuron in neurons)
+        {
+            neuron.Activate(inputs);
+            neuron.Transfer(); // TODO: extract to parameter or smth
+        }
+    }
+
+    public List<double> NeuronOutputs()
+    {
+        return Utils.GenerateList(neurons.Count, (i) => neurons[i].output);
+    }
+
     public IEnumerator<Neuron> GetEnumerator()
     {
         return new LayerEnumerator(this);
+    }
+
+    public Neuron this[int index]
+    {
+        get => neurons[index];
     }
 
     IEnumerator IEnumerable.GetEnumerator()
